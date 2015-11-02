@@ -1,0 +1,76 @@
+<script type="text/javascript">
+    RED.nodes.registerType('FP-Enroll',{
+        category: 'function',
+        color: '#a6bbcf',
+        defaults: {
+            name: {value:""}
+        },
+        inputs:1,
+        outputs:2,
+        icon: "",
+        label: function() {
+            return this.name||"enroll";
+        }
+    });
+</script>
+<script type="text/x-red" data-template-name="FP-Enroll">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+<script type="text/x-red" data-help-name="FP-Enroll">
+    <p></p>
+</script>
+
+
+<script type="text/javascript">
+    RED.nodes.registerType('FP-Verify',{
+        category: 'function',
+        color: '#a6bbcf',
+        defaults: {
+            name: {value:""}
+        },
+        inputs:1,
+        outputs:2,
+        icon: "",
+        label: function() {
+            return this.name||"verify";
+        }
+    });
+</script>
+<script type="text/x-red" data-template-name="FP-Verify">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+<script type="text/x-red" data-help-name="FP-Verify">
+    <p></p>
+</script>
+
+
+<script type="text/javascript">
+    RED.nodes.registerType('FP-Identify',{
+        category: 'function',
+        color: '#a6bbcf',
+        defaults: {
+            name: {value:""}
+        },
+        inputs:1,
+        outputs:2,
+        icon: "",
+        label: function() {
+            return this.name||"identify";
+        }
+    });
+</script>
+<script type="text/x-red" data-template-name="FP-Identify">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+<script type="text/x-red" data-help-name="FP-Identify">
+    <p></p>
+</script>

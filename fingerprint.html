@@ -19,8 +19,11 @@
                 type: "POST",
                 success: function(resp, textStatus, xhr) {
                     if (xhr.status == 200) {
+                        var option;
+                        $("#node-input-device").empty();
+                        $("#node-input-device").append(new Option("Autoselect First Reader", ""));
                         for(var i = 0; i < resp.length; i++) {
-                            var option = new Option(resp[i], resp[i]);
+                            option = new Option(resp[i], resp[i]);
                             if(node.device == resp[i])
                                 $(option).attr('selected', true);
                             $("#node-input-device").append(option);
@@ -40,7 +43,7 @@
         <label for="node-input-device"><i class="icon-tag"></i> Device</label>
         <select id="node-input-device">
         </select>
-    </div>    
+    </div>
 </script>
 <script type="text/x-red" data-help-name="FP-Enroll">
     <p></p>
@@ -68,8 +71,11 @@
                 type: "POST",
                 success: function(resp, textStatus, xhr) {
                     if (xhr.status == 200) {
+                        var option;
+                        $("#node-input-device").empty();
+                        $("#node-input-device").append(new Option("Autoselect First Reader", ""));
                         for(var i = 0; i < resp.length; i++) {
-                            var option = new Option(resp[i], resp[i]);
+                            option = new Option(resp[i], resp[i]);
                             if(node.device == resp[i])
                                 $(option).attr('selected', true);
                             $("#node-input-device").append(option);
@@ -88,6 +94,7 @@
     <div class="form-row">
         <label for="node-input-device"><i class="icon-tag"></i> Device</label>
         <select id="node-input-device">
+                    <option value="">Autoselect First Reader</option>
         </select>
     </div>
 </script>
@@ -117,8 +124,11 @@
                 type: "POST",
                 success: function(resp, textStatus, xhr) {
                     if (xhr.status == 200) {
+                        var option;
+                        $("#node-input-device").empty();
+                        $("#node-input-device").append(new Option("Autoselect First Reader", ""));
                         for(var i = 0; i < resp.length; i++) {
-                            var option = new Option(resp[i], resp[i]);
+                            option = new Option(resp[i], resp[i]);
                             if(node.device == resp[i])
                                 $(option).attr('selected', true);
                             $("#node-input-device").append(option);
@@ -137,6 +147,7 @@
     <div class="form-row">
         <label for="node-input-device"><i class="icon-tag"></i> Device</label>
         <select id="node-input-device">
+            <option value="">Autoselect First Reader</option>
         </select>
     </div>
 </script>

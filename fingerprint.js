@@ -20,11 +20,23 @@ module.exports = function(RED) {
             node.log("entered");
             if(!initalized) {
                 msg.payload = { result: false };
-                node.send([null, msg, null]);
+                node.send([null, msg, { payload: { state: 97, messsage: "fprint-not-initialized" } }]);
+                return;
             }
 
-            var devices = fprint.discoverDevices();
-            node.deviceHandle = fprint.openDevice(devices[0]);
+            if(!node.deviceHandle) {
+                if(config.device == "") {
+                    var devices = fprint.discoverDevices();
+                    config.device = devices[0];
+                }
+                node.deviceHandle = fprint.openDevice(config.device);
+            }
+
+            if(!node.deviceHandle) {
+                msg.payload = { result: false };
+                node.send([null, msg, { payload: { state: 98, messsage: "device-open-fail" } }]);
+                return;
+            }
             var stage = 1;
             var stages= fprint.getEnrollStages(node.deviceHandle);
             var ret = fprint.enrollStart(node.deviceHandle, function(state, message, fingerprint) {
@@ -83,11 +95,23 @@ module.exports = function(RED) {
             node.log("entered");
             if(!initalized) {
                 msg.payload = { result: false };
-                node.send([null, msg, null]);
+                node.send([null, msg, { payload: { state: 97, messsage: "fprint-not-initialized" } }]);
             }
 
-            var devices = fprint.discoverDevices();
-            node.deviceHandle = fprint.openDevice(devices[0]);
+            if(!node.deviceHandle) {
+                if(config.device == "") {
+                    var devices = fprint.discoverDevices();
+                    config.device = devices[0];
+                }
+                node.deviceHandle = fprint.openDevice(config.device);
+            }
+
+            if(!node.deviceHandle) {
+                msg.payload = { result: false };
+                node.send([null, msg, { payload: { state: 98, messsage: "device-open-fail" } }]);
+                return;
+            }
+
             var ret = fprint.verifyStart(node.deviceHandle, msg.payload.fingerprint, function(state, message) {
                 console.log("state: " + state + "; message: " + message)
                 if(state == 0 || state == 1) {
@@ -132,12 +156,21 @@ module.exports = function(RED) {
             node.log("entered");
             if(!initalized) {
                 msg.payload = { result: false };
-                node.send([null, msg, null]);
+                node.send([null, msg, { payload: { state: 97, messsage: "fprint-not-initialized" } }]);
             }
 
             if(!node.deviceHandle) {
-                var devices = fprint.discoverDevices();
-                node.deviceHandle = fprint.openDevice(devices[0]);
+                if(config.device == "") {
+                    var devices = fprint.discoverDevices();
+                    config.device = devices[0];
+                }
+                node.deviceHandle = fprint.openDevice(config.device);
+            }
+
+            if(!node.deviceHandle) {
+                msg.payload = { result: false };
+                node.send([null, msg, { payload: { state: 98, messsage: "device-open-fail" } }]);
+                return;
             }
 
             var ret = fprint.identifyStart(node.deviceHandle, msg.payload.fingerprints, function(state, message, matchedIndex) {
@@ -180,4 +213,14 @@ module.exports = function(RED) {
     RED.nodes.registerType("FP-Enroll",   fprint_enrollNode);
     RED.nodes.registerType("FP-Verify",   fprint_verifyNode);
     RED.nodes.registerType("FP-Identify", fprint_identifyNode);
+
+    RED.httpAdmin.post("/fingerprint/devices", RED.auth.needsPermission("fingerprint.read"), function(req, res) {
+        if(initalized) {
+            var body = JSON.stringify(fprint.discoverDevices())
+            res.writeHead(200, {
+              'Content-Length': body.length,
+              'Content-Type': 'text/json' });
+            res.end(body);
+        }
+    });
 }

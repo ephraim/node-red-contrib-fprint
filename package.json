@@ -1,18 +1,18 @@
 {
-    "name": "node-red-node-fingerprint",
+    "name": "node-red-node-fprint",
     "version": "0.0.1",
     "description": "fprint node-red node",
-    "repsitory": {
+    "repository": {
         "type": "git",
         "url": "https://github.com/ephraim/node-red-node-fingerprint.git"
     },
     "dependencies": {
-        "node-fingerprint": "git+https://github.com/ephraim/node-fingerprint.git"
+        "node-fprint": "git+https://github.com/ephraim/node-fingerprint.git"
     },
-    "keywords": [ "node-red" ],
+    "keywords": [ "node-red", "fprint", "fingerprint" ],
     "node-red": {
         "nodes": {
-            "node-red-node-fingerprint": "fingerprint.js"
+            "node-red-node-fprint": "fingerprint.js"
         }
     }
 }

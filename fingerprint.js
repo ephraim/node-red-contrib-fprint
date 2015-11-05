@@ -1,4 +1,4 @@
-var fprint = require("node-fingerprint");
+var fprint = require("node-fprint");
 
 var initalized = fprint.init();
 

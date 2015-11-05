@@ -17,7 +17,6 @@ module.exports = function(RED) {
         node.deviceHandle = null;
 
         this.on('input', function(msg) {
-            node.log("entered");
             if(!initalized) {
                 msg.payload = { result: false };
                 node.send([null, msg, { payload: { state: 97, messsage: "fprint-not-initialized" } }]);
@@ -40,9 +39,7 @@ module.exports = function(RED) {
             var stage = 1;
             var stages= fprint.getEnrollStages(node.deviceHandle);
             var ret = fprint.enrollStart(node.deviceHandle, function(state, message, fingerprint) {
-                console.log("state: " + state + "; message: " + message)
                 if(state > 3) {
-                    console.log("closing down; cause error");
                     fprint.closeDevice(node.deviceHandle);
                     node.deviceHandle = null;
                     msg.payload = { result: false };
@@ -92,7 +89,6 @@ module.exports = function(RED) {
         node.deviceHandle = null;
 
         this.on('input', function(msg) {
-            node.log("entered");
             if(!initalized) {
                 msg.payload = { result: false };
                 node.send([null, msg, { payload: { state: 97, messsage: "fprint-not-initialized" } }]);
@@ -113,7 +109,6 @@ module.exports = function(RED) {
             }
 
             var ret = fprint.verifyStart(node.deviceHandle, msg.payload.fingerprint, function(state, message) {
-                console.log("state: " + state + "; message: " + message)
                 if(state == 0 || state == 1) {
                     fprint.verifyStop(node.deviceHandle, function() {
                         fprint.closeDevice(node.deviceHandle);
@@ -153,7 +148,6 @@ module.exports = function(RED) {
         node.deviceHandle = null;
 
         this.on('input', function(msg) {
-            node.log("entered");
             if(!initalized) {
                 msg.payload = { result: false };
                 node.send([null, msg, { payload: { state: 97, messsage: "fprint-not-initialized" } }]);
@@ -174,7 +168,6 @@ module.exports = function(RED) {
             }
 
             var ret = fprint.identifyStart(node.deviceHandle, msg.payload.fingerprints, function(state, message, matchedIndex) {
-                console.log("state: " + state + "; message: " + message)
                 if(state == 0 || state == 1) {
                     fprint.identifyStop(node.deviceHandle, function() {
                         fprint.closeDevice(node.deviceHandle);

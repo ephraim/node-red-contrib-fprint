@@ -10,16 +10,41 @@ function updateInitalizedStatus(node, active)
         node.status({fill:"red", shape:"ring", text:"uninitalized"});
 }
 
+function sendResult(msg, state)
+{
+    this.sendState(state);
+    this.sendMessage(msg);
+}
+
+function sendState(state)
+{
+    this.send([null, null, { payload: state }]);
+}
+
+function sendMessage(msg)
+{
+    if(msg.payload.result)
+        this.send([msg, null, null]);
+    else
+        this.send([null, msg, null]);
+}
+
 module.exports = function(RED) {
     function fprint_enrollNode(config) {
         RED.nodes.createNode(this,config);
         var node = this;
         node.deviceHandle = null;
+        node.sendResult = sendResult;
+        node.sendState = sendState;
+        node.sendMessage = sendMessage;
 
         this.on('input', function(msg) {
+            if(typeof msg.payload != "object")
+				msg.payload = {};
+
             if(!initalized) {
-                msg.payload = { result: false };
-                node.send([null, msg, { payload: { state: 97, messsage: "fprint-not-initialized" } }]);
+                msg.payload.result = false;
+                node.sendResult(msg, { state: 97, message: "fprint-not-initialized" });
                 return;
             }
 
@@ -32,8 +57,8 @@ module.exports = function(RED) {
             }
 
             if(!node.deviceHandle) {
-                msg.payload = { result: false };
-                node.send([null, msg, { payload: { state: 98, messsage: "device-open-fail" } }]);
+                msg.payload.result = false;
+                node.sendResult(msg, { payload: { state: 98, message: "device-open-fail" } });
                 return;
             }
             var stage = 1;
@@ -42,8 +67,8 @@ module.exports = function(RED) {
                 if(state > 3) {
                     fprint.closeDevice(node.deviceHandle);
                     node.deviceHandle = null;
-                    msg.payload = { result: false };
-                    node.send([null, msg, { payload: { state: state, messsage: message, stage: stage, stages: stages } }]);
+                    msg.payload.result = false;
+                    node.sendResult(msg, { payload: { state: state, message: message, stage: stage, stages: stages } });
                     return;
                 }
 
@@ -53,25 +78,22 @@ module.exports = function(RED) {
                     fprint.enrollStop(node.deviceHandle, function() {
                         fprint.closeDevice(node.deviceHandle);
                         node.deviceHandle = null;
-                        if(state == 1) {
-                            msg.payload = { result: true, fingerprint: fingerprint };
-                            node.send([msg, null, { payload: { state: state, messsage: message } }]);
-                        }
-                        else {
-                            msg.payload = { result: false };
-                            node.send([null, msg, { payload: { state: state, messsage: message } }]);
-                        }
+                        msg.payload.result = (state == 1);
+                        if(msg.payload.result)
+                            msg.payload.fingerprint = fingerprint;
+
+                        node.sendResult(msg, { payload: { state: state, message: message } });
                     });
                 }
                 else {
-                    node.send([null, null, { payload: { state: state, messsage: message, stage: stage, stages: stages } }]);
+                    node.sendState({ state: state, message: message, stage: stage, stages: stages });
                 }
             });
             if(ret) {
-                node.send([null, null, { payload: { state: 0, messsage: "enroll-started", stage: stage, stages: stages } }]);
+                node.sendState({ state: 0, message: "enroll-started", stage: stage, stages: stages });
             }
             else {
-                node.send([null, null, { payload: { state: 99, messsage: "enroll-unknown-error", stage: stage, stages: stages } }]);
+                node.sendState({ state: 99, message: "enroll-unknown-error", stage: stage, stages: stages });
             }
         });
         this.on('close', function() {
@@ -87,11 +109,17 @@ module.exports = function(RED) {
         RED.nodes.createNode(this,config);
         var node = this;
         node.deviceHandle = null;
+        node.sendResult = sendResult;
+        node.sendState = sendState;
+        node.sendMessage = sendMessage;
 
         this.on('input', function(msg) {
+            if(typeof msg.payload != "object")
+				msg.payload = {};
+
             if(!initalized) {
-                msg.payload = { result: false };
-                node.send([null, msg, { payload: { state: 97, messsage: "fprint-not-initialized" } }]);
+                msg.payload.result = false;
+                node.sendResult(msg, { state: 97, message: "fprint-not-initialized" });
             }
 
             if(!node.deviceHandle) {
@@ -103,8 +131,8 @@ module.exports = function(RED) {
             }
 
             if(!node.deviceHandle) {
-                msg.payload = { result: false };
-                node.send([null, msg, { payload: { state: 98, messsage: "device-open-fail" } }]);
+                msg.payload.result = false;
+                node.sendResult(msg, { payload: { state: 98, message: "device-open-fail" } });
                 return;
             }
 
@@ -113,24 +141,20 @@ module.exports = function(RED) {
                     fprint.verifyStop(node.deviceHandle, function() {
                         fprint.closeDevice(node.deviceHandle);
                         node.deviceHandle = null;
-                        msg.payload = { result: true, matched: (state == 1) };
-                        if(state == 1) {
-                            node.send([msg, null, { payload: { state: state, messsage: message } }]);
-                        }
-                        else
-                            node.send([null, msg, { payload: { state: state, messsage: message } }]);
+                        msg.payload.result = (state == 1);
+                        node.sendResult(msg, { payload: { state: state, message: message } });
                     });
                 }
                 else {
-                    node.send([null, null, { payload: { state: state, messsage: message } }]);
+                    node.sendState({ state: state, message: message });
                 }
             });
 
             if(ret) {
-                node.send([null, null, { payload: { state: 0, messsage: "verify-started" } }]);
+                node.sendState({ state: 0, message: "verify-started" });
             }
             else {
-                node.send([null, null, { payload: { state: 99, messsage: "verify-unknown-error" } }]);
+                node.sendState({ state: 99, message: "verify-unknown-error" });
             }
         });
         this.on('close', function() {
@@ -146,11 +170,17 @@ module.exports = function(RED) {
         RED.nodes.createNode(this,config);
         var node = this;
         node.deviceHandle = null;
+        node.sendResult = sendResult;
+        node.sendState = sendState;
+        node.sendMessage = sendMessage;
 
         this.on('input', function(msg) {
+            if(typeof msg.payload != "object")
+				msg.payload = {};
+
             if(!initalized) {
-                msg.payload = { result: false };
-                node.send([null, msg, { payload: { state: 97, messsage: "fprint-not-initialized" } }]);
+                msg.payload.result = false;
+                node.sendResult(msg, { state: 97, message: "fprint-not-initialized" });
             }
 
             if(!node.deviceHandle) {
@@ -162,8 +192,8 @@ module.exports = function(RED) {
             }
 
             if(!node.deviceHandle) {
-                msg.payload = { result: false };
-                node.send([null, msg, { payload: { state: 98, messsage: "device-open-fail" } }]);
+                msg.payload.result = false;
+                node.sendResult(msg, { payload: { state: 98, message: "device-open-fail" } });
                 return;
             }
 
@@ -172,27 +202,24 @@ module.exports = function(RED) {
                     fprint.identifyStop(node.deviceHandle, function() {
                         fprint.closeDevice(node.deviceHandle);
                         node.deviceHandle = null;
-                        msg.payload = { result: true, matched: false, matchedIndex: -1 };
-                        if(state == 1) {
-                            msg.payload.matched = true;
+                        msg.payload.result = (state == 1);
+                        msg.payload.matchedIndex= -1;
+                        if(msg.payload.result)
                             msg.payload.matchedIndex = matchedIndex;
-                            node.send([msg, null, { payload: { state: state, messsage: message } }]);
-                        }
-                        else {
-                            node.send([null, msg, { payload: { state: state, messsage: message } }]);
-                        }
+
+                        node.sendResult(msg, { payload: { state: state, message: message } });
                     });
                 }
                 else {
-                    node.send([null, null, { payload: { state: state, messsage: message } }]);
+                    node.sendState({ state: state, message: message });
                 }
             });
 
             if(ret) {
-                node.send([null, null, { payload: { state: 0, messsage: "identify-started" } }]);
+                node.sendState({ state: 0, message: "identify-started" });
             }
             else {
-                node.send([null, null, { payload: { state: 99, messsage: "identify-unknown-error" } }]);
+                node.sendState({ state: 99, message: "identify-unknown-error" });
             }
         });
         this.on('close', function() {

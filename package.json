@@ -1,13 +1,13 @@
 {
-  "name": "node-red-node-fprint",
+  "name": "node-red-contrib-fprint",
   "version": "0.0.2",
   "description": "fprint node-red node",
   "repository": {
     "type": "git",
-    "url": "https://github.com/ephraim/node-red-node-fingerprint.git"
+    "url": "https://github.com/ephraim/node-red-contrib-fprint.git"
   },
   "dependencies": {
-    "node-fprint": "git+https://github.com/ephraim/node-fingerprint.git"
+    "node-fprint": "git+https://github.com/ephraim/node-fprint.git"
   },
   "keywords": [
     "node-red",

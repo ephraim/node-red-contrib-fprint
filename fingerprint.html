@@ -154,3 +154,30 @@
 <script type="text/x-red" data-help-name="FP-Identify">
     <p></p>
 </script>
+
+
+<script type="text/javascript">
+    RED.nodes.registerType('FP-Cancel',{
+        category: 'function',
+        color: '#a6bbcf',
+        defaults: {
+            name: {value:""},
+            device: {value:""}
+        },
+        inputs:1,
+        outputs:0,
+        icon: "",
+        label: function() {
+            return this.name||"cancel";
+        },
+    });
+</script>
+<script type="text/x-red" data-template-name="FP-Cancel">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+</script>
+<script type="text/x-red" data-help-name="FP-Cancel">
+    <p></p>
+</script>

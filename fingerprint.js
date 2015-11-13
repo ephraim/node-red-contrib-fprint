@@ -12,6 +12,7 @@ function updateInitalizedStatus(node, active)
 
 function sendResult(msg, state)
 {
+	this.msg = null;
     this.sendState(state);
     this.sendMessage(msg);
 }
@@ -37,16 +38,18 @@ module.exports = function(RED) {
         node.sendResult = sendResult;
         node.sendState = sendState;
         node.sendMessage = sendMessage;
+		node.msg = null;
 
         this.on('input', function(msg) {
             if(typeof msg.payload != "object")
 				msg.payload = {};
 
+			msg.payload.cancelled = false;
+            msg.payload.result = false;
             if(!initalized) {
-                msg.payload.result = false;
                 node.sendResult(msg, { state: 97, message: "fprint-not-initialized" });
-                return;
-            }
+				return;
+			}
 
             if(!node.deviceHandle) {
                 if(config.device == "") {
@@ -61,6 +64,8 @@ module.exports = function(RED) {
                 node.sendResult(msg, { payload: { state: 98, message: "device-open-fail" } });
                 return;
             }
+
+			node.msg = msg;
             var stage = 1;
             var stages= fprint.getEnrollStages(node.deviceHandle);
             var ret = fprint.enrollStart(node.deviceHandle, function(state, message, fingerprint) {
@@ -99,7 +104,6 @@ module.exports = function(RED) {
         this.on('close', function() {
             if(node.deviceHandle)
                 fprint.enrollStop(node.deviceHandle, function() {
-                    var tmp = node.deviceHandle;
                     fprint.closeDevice(node.deviceHandle);
                     node.deviceHandle = null;
                 });
@@ -112,15 +116,18 @@ module.exports = function(RED) {
         node.sendResult = sendResult;
         node.sendState = sendState;
         node.sendMessage = sendMessage;
+		node.msg = null;
 
         this.on('input', function(msg) {
             if(typeof msg.payload != "object")
 				msg.payload = {};
 
+			msg.payload.cancelled = false;
+            msg.payload.result = false;
             if(!initalized) {
-                msg.payload.result = false;
                 node.sendResult(msg, { state: 97, message: "fprint-not-initialized" });
-            }
+				return;
+			}
 
             if(!node.deviceHandle) {
                 if(config.device == "") {
@@ -136,6 +143,7 @@ module.exports = function(RED) {
                 return;
             }
 
+			node.msg = msg;
             var ret = fprint.verifyStart(node.deviceHandle, msg.payload.fingerprint, function(state, message) {
                 if(state == 0 || state == 1) {
                     fprint.verifyStop(node.deviceHandle, function() {
@@ -160,7 +168,6 @@ module.exports = function(RED) {
         this.on('close', function() {
             if(node.deviceHandle)
                 fprint.verifyStop(node.deviceHandle, function() {
-                    var tmp = node.deviceHandle;
                     fprint.closeDevice(node.deviceHandle);
                     node.deviceHandle = null;
                 });
@@ -173,15 +180,18 @@ module.exports = function(RED) {
         node.sendResult = sendResult;
         node.sendState = sendState;
         node.sendMessage = sendMessage;
+		node.msg = null;
 
         this.on('input', function(msg) {
             if(typeof msg.payload != "object")
 				msg.payload = {};
 
+			msg.payload.cancelled = false;
+            msg.payload.result = false;
             if(!initalized) {
-                msg.payload.result = false;
                 node.sendResult(msg, { state: 97, message: "fprint-not-initialized" });
-            }
+				return;
+			}
 
             if(!node.deviceHandle) {
                 if(config.device == "") {
@@ -197,6 +207,7 @@ module.exports = function(RED) {
                 return;
             }
 
+			node.msg = msg;
             var ret = fprint.identifyStart(node.deviceHandle, msg.payload.fingerprints, function(state, message, matchedIndex) {
                 if(state == 0 || state == 1) {
                     fprint.identifyStop(node.deviceHandle, function() {
@@ -230,9 +241,50 @@ module.exports = function(RED) {
                 });
         });
     }
+    function fprint_cancelNode(config) {
+        RED.nodes.createNode(this,config);
+        var node = this;
+
+        this.on('input', function(msg) {
+			RED.nodes.eachNode(function(n) {
+				if(n.type == "FP-Enroll") {
+					if(n.deviceHandle)
+						fprint.enrollStop(n.deviceHandle, function() {
+							fprint.closeDevice(n.deviceHandle);
+							n.deviceHandle = null;
+							n.msg.payload.result = false;
+							n.msg.payload.cancelled = true;
+							n.sendResult(n.msg, { state: 97, message: "enroll-cancelled" });
+						});
+				}
+				else if(n.type == "FP-Verify") {
+					if(n.deviceHandle)
+						fprint.verifyStop(n.deviceHandle, function() {
+							fprint.closeDevice(n.deviceHandle);
+							n.deviceHandle = null;
+							n.msg.payload.result = false;
+							n.msg.payload.cancelled = true;
+							n.sendResult(n.msg, { state: 97, message: "verify-cancelled" });
+						});
+				}
+				else if(n.type == "FP-Identify") {
+					if(n.deviceHandle)
+						fprint.identifyStop(n.deviceHandle, function() {
+							fprint.closeDevice(n.deviceHandle);
+							n.deviceHandle = null;
+							n.msg.payload.result = false;
+							n.msg.payload.cancelled = true;
+							n.sendResult(n.msg, { state: 97, message: "identify-cancelled" });
+						});
+				}
+			});
+        });
+    }
+
     RED.nodes.registerType("FP-Enroll",   fprint_enrollNode);
     RED.nodes.registerType("FP-Verify",   fprint_verifyNode);
     RED.nodes.registerType("FP-Identify", fprint_identifyNode);
+    RED.nodes.registerType("FP-Cancel",   fprint_cancelNode);
 
     RED.httpAdmin.post("/fingerprint/devices", RED.auth.needsPermission("fingerprint.read"), function(req, res) {
         if(initalized) {
